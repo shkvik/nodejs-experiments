@@ -1,6 +1,7 @@
 #include <iostream>
 #include <stack>
 #include <queue>
+#include <functional>
 
 typedef enum {
   EL_RUN,
@@ -13,17 +14,22 @@ class event_loop {
 public:
   int run() {
     while (status != EL_EXIT) {
-      call_stack->
-
-      
+      execute_sync_tasks();
+      execute_micro_tasks();
+      execute_macro_tasks();
     }
   }
 
 private:
-  int executor() {
+  void execute_sync_tasks() {
 
   }
+  void execute_micro_tasks() {
 
+  }
+  void execute_macro_tasks() {
+
+  }
 
 private:
   loop_status status;
@@ -54,8 +60,46 @@ private:
 
 class micro_queue {
   using micro_task_q = std::unique_ptr<std::queue<micro_task>>;
+public:
+  void push(micro_task&& micro_t) {
+    queue->push(std::move(micro_t));
+  }
+
 private:
   micro_task_q queue;
+};
+
+
+class micro_task : public task {
+
+};
+
+template<typename type, typename... args>
+class promise : public micro_task {
+  using call_back_t = std::function<type(args...)>;
+public:
+  promise(micro_queue& mq, call_back_t&& cb) :
+    call_back(std::move(cb)),
+    status(PENDING)
+  {
+    mq.push(std::move(*this));
+  }
+
+public: 
+  int resolve() {
+    status = FINISHED;
+  }
+private:
+  call_back_t call_back;
+
+private:
+  typedef enum : uint32_t{
+    PENDING,
+    FINISHED,
+    REJECTED
+  } promise_status;
+
+  promise_status status;
 };
 
 class task {
@@ -63,17 +107,19 @@ class task {
 };
 
 class sync_task : public task {
-
+  // create micro_task
 };
 
-class micro_task : public task {
 
-};
 
 class macro_task : public task {
 
 };
 
+
+int testFunction(int a) {
+  std::cout << "Hello World!\n";
+}
 
 int main() {
   std::cout << "Hello World!\n";
